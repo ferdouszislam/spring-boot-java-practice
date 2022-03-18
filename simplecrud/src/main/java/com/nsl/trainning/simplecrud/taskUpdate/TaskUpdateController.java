@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -80,4 +81,13 @@ public class TaskUpdateController {
 				.body(new ResponseMessage(true, responseMessage));
 	}
 
+	@DeleteMapping("/{id}")
+	public ResponseEntity<?> deleteTaskUpdate(@PathVariable Long id) {
+
+		taskUpdateService.deleteTaskUpdate(id);
+
+		return ResponseEntity.status(HttpStatus.OK)
+				.body(new ResponseMessage(true, "task update with id=" + id
+						+ " deleted successfully."));
+	}
 }
