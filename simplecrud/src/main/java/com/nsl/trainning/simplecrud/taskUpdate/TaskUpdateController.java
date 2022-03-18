@@ -3,11 +3,15 @@ package com.nsl.trainning.simplecrud.taskUpdate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.nsl.trainning.util.ResponseMessage;
 
 @RestController
 @RequestMapping(path = "api/v1/taskUpdates")
@@ -26,8 +30,26 @@ public class TaskUpdateController {
 	}
 
 	@PostMapping
-	public void createTaskUpdate(@RequestBody TaskUpdate taskUpdate) {
-		taskUpdateService.createTaskUpdate(taskUpdate);
+	public ResponseEntity<?> createTaskUpdate(
+			@RequestBody TaskUpdate taskUpdate) {
+		try {
+			
+			taskUpdateService.createTaskUpdate(taskUpdate);
+
+		} catch (Exception e) {
+			
+			System.out.println("Exception occured while creating task update: "
+					+ e.getMessage());
+
+			String responseMessage = "task update for author: "
+					+ taskUpdate.getAuthor() + " on "
+					+ taskUpdate.getLocalDate().toString() + " already exists";
+
+			return ResponseEntity.status(HttpStatus.CONFLICT)
+					.body(new ResponseMessage(true, responseMessage));
+		}
+
+		return ResponseEntity.ok().body(taskUpdate);
 	}
 
 }

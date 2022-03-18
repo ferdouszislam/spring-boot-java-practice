@@ -1,6 +1,7 @@
 package com.nsl.trainning.simplecrud.taskUpdate;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,12 +18,21 @@ public class TaskUpdateService {
 
 	public List<TaskUpdate> getTaskUpdates() {
 		return taskUpdateRepository.findAll();
-
-		// return List.of(new TaskUpdate(1L, List.of("eat", "code", "sleep"),
-		// LocalDate.of(2022, Month.MARCH, 16)))
 	}
 
-	public void createTaskUpdate(TaskUpdate taskUpdate) {
+	public void createTaskUpdate(TaskUpdate taskUpdate)
+			throws IllegalStateException {
+
+		Optional<TaskUpdate> taskUpdateByAuthorAndDate = taskUpdateRepository
+				.findTaskUpdateByAuthorAndDate(taskUpdate.getAuthor(),
+						taskUpdate.getLocalDate());
+
+		if (taskUpdateByAuthorAndDate.isPresent()) {
+			throw new IllegalStateException(
+					"task update for author and date already exists: "
+							+ taskUpdateByAuthorAndDate.toString());
+		}
+
 		taskUpdateRepository.save(taskUpdate);
 	}
 
