@@ -56,6 +56,26 @@ public class TaskUpdateController {
 		return ResponseEntity.ok().body(taskUpdate);
 	}
 
+	@GetMapping("/{id}")
+	public ResponseEntity<?> readTaskUpdate(@PathVariable Long id) {
+
+		try {
+
+			TaskUpdate taskUpdate = taskUpdateService.readTaskUpdate(id);
+			return ResponseEntity.ok().body(taskUpdate);
+		} catch (NotFoundException e) {
+
+			System.out.println("Exception occured while reading taskUpdate: "
+					+ e.getMessage());
+
+			String responseMessage = "task update with id=" + id
+					+ " does not exist";
+
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(new ResponseMessage(false, responseMessage));
+		}
+	}
+
 	@PatchMapping("/{id}")
 	public ResponseEntity<?> updateTaskUpdate(
 			@RequestBody TaskUpdate taskUpdate, @PathVariable Long id) {

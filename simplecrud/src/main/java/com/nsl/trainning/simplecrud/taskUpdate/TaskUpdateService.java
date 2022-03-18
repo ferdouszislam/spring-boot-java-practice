@@ -60,4 +60,13 @@ public class TaskUpdateService {
 		taskUpdateRepository.deleteById(id);
 	}
 
+	public TaskUpdate readTaskUpdate(Long id) throws NotFoundException {
+		Optional<TaskUpdate> taskUpdate = taskUpdateRepository.findById(id);
+		if (!taskUpdate.isPresent()) {
+			throw new NotFoundException();
+		}
+
+		return taskUpdate.get();
+	}
+
 }
