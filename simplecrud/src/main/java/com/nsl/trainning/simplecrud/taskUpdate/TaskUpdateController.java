@@ -3,9 +3,12 @@ package com.nsl.trainning.simplecrud.taskUpdate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -50,6 +53,31 @@ public class TaskUpdateController {
 		}
 
 		return ResponseEntity.ok().body(taskUpdate);
+	}
+
+	@PatchMapping("/{id}")
+	public ResponseEntity<?> updateTaskUpdate(
+			@RequestBody TaskUpdate taskUpdate, @PathVariable Long id) {
+
+		try {
+
+			taskUpdateService.updateTaskUpdate(taskUpdate, id);
+		} catch (NotFoundException e) {
+
+			System.out.println("Exception occured while updating taskUpdate: "
+					+ e.getMessage());
+
+			String responseMessage = "task update with id=" + id
+					+ " does not exist";
+
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(new ResponseMessage(false, responseMessage));
+		}
+
+		String responseMessage = "task update with id=" + id
+				+ " updated successfully";
+		return ResponseEntity.status(HttpStatus.OK)
+				.body(new ResponseMessage(true, responseMessage));
 	}
 
 }
