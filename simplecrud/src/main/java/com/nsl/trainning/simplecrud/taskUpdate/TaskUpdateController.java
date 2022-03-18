@@ -2,6 +2,8 @@ package com.nsl.trainning.simplecrud.taskUpdate;
 
 import java.util.List;
 
+import javax.persistence.EntityExistsException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.http.HttpStatus;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -40,7 +43,7 @@ public class TaskUpdateController {
 			
 			taskUpdateService.createTaskUpdate(taskUpdate);
 
-		} catch (Exception e) {
+		} catch (EntityExistsException e) {
 			
 			System.out.println("Exception occured while creating task update: "
 					+ e.getMessage());
@@ -76,13 +79,16 @@ public class TaskUpdateController {
 		}
 	}
 
-	@PatchMapping("/{id}")
-	public ResponseEntity<?> updateTaskUpdate(
-			@RequestBody TaskUpdate taskUpdate, @PathVariable Long id) {
-
+	private ResponseEntity<?> updateTaskUpdateUtil(boolean partialUpdate,
+			TaskUpdate taskUpdate, Long id) {
 		try {
 
-			taskUpdateService.updateTaskUpdate(taskUpdate, id);
+			if (partialUpdate) {
+				taskUpdateService.updateTaskUpdatePartial(taskUpdate, id);
+			} else {
+				taskUpdateService.updateTaskUpdate(taskUpdate, id);
+			}
+
 		} catch (NotFoundException e) {
 
 			System.out.println("Exception occured while updating taskUpdate: "
@@ -93,12 +99,37 @@ public class TaskUpdateController {
 
 			return ResponseEntity.status(HttpStatus.NOT_FOUND)
 					.body(new ResponseMessage(false, responseMessage));
+		} catch (EntityExistsException e) {
+
+			System.out.println("Exception occured while updating taskUpdate: "
+					+ e.getMessage());
+
+			String responseMessage = "task update for author: "
+					+ taskUpdate.getAuthor() + " on "
+					+ taskUpdate.getLocalDate().toString() + " already exists";
+
+			return ResponseEntity.status(HttpStatus.CONFLICT)
+					.body(new ResponseMessage(true, responseMessage));
 		}
 
-		String responseMessage = "task update with id=" + id
+		String responseMessage = "taskUpdate with id=" + id
 				+ " updated successfully";
 		return ResponseEntity.status(HttpStatus.OK)
 				.body(new ResponseMessage(true, responseMessage));
+	}
+
+	@PutMapping("/{id}")
+	public ResponseEntity<?> updateTaskUpdate(
+			@RequestBody TaskUpdate taskUpdate, @PathVariable Long id) {
+
+		return updateTaskUpdateUtil(false, taskUpdate, id);
+	}
+
+	@PatchMapping("/{id}")
+	public ResponseEntity<?> updateTaskUpdatePartial(
+			@RequestBody TaskUpdate taskUpdate, @PathVariable Long id) {
+
+		return updateTaskUpdateUtil(true, taskUpdate, id);
 	}
 
 	@DeleteMapping("/{id}")

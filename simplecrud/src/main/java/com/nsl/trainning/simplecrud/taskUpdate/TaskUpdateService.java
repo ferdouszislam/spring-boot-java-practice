@@ -3,6 +3,9 @@ package com.nsl.trainning.simplecrud.taskUpdate;
 import java.util.List;
 import java.util.Optional;
 
+import javax.persistence.EntityExistsException;
+
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.stereotype.Service;
@@ -24,14 +27,14 @@ public class TaskUpdateService {
 	}
 
 	public void createTaskUpdate(TaskUpdate taskUpdate)
-			throws IllegalStateException {
+			throws EntityExistsException {
 
 		Optional<TaskUpdate> taskUpdateByAuthorAndDate = taskUpdateRepository
 				.findTaskUpdateByAuthorAndDate(taskUpdate.getAuthor(),
 						taskUpdate.getLocalDate());
 
 		if (taskUpdateByAuthorAndDate.isPresent()) {
-			throw new IllegalStateException(
+			throw new EntityExistsException(
 					"task update for author and date already exists: "
 							+ taskUpdateByAuthorAndDate.toString());
 		}
@@ -39,8 +42,38 @@ public class TaskUpdateService {
 		taskUpdateRepository.save(taskUpdate);
 	}
 
+	private boolean taskUpdateWithAuthorAndDateExceptIdExists(
+			TaskUpdate taskUpdate) {
+
+		return taskUpdateRepository
+				.findTaskUpdateByAuthorAndDateExceptId(taskUpdate.getAuthor(),
+						taskUpdate.getLocalDate(), taskUpdate.getId())
+				.isPresent();
+	}
+
 	public void updateTaskUpdate(TaskUpdate updatedTaskUpdate, Long id)
-			throws NotFoundException {
+			throws NotFoundException, EntityExistsException {
+
+		Optional<TaskUpdate> optional = taskUpdateRepository.findById(id);
+		if (!optional.isPresent()) {
+			throw new NotFoundException();
+		}
+
+		if(taskUpdateWithAuthorAndDateExceptIdExists(updatedTaskUpdate)) {
+			throw new EntityExistsException();
+		}
+		
+		TaskUpdate taskUpdate = optional.get();
+		BeanUtils.copyProperties(updatedTaskUpdate, taskUpdate);
+		if (taskUpdate.getId() == null) {
+			taskUpdate.setId(id);
+		}
+
+		taskUpdateRepository.save(taskUpdate);
+	}
+
+	public void updateTaskUpdatePartial(TaskUpdate updatedTaskUpdate, Long id)
+			throws NotFoundException, EntityExistsException {
 
 		Optional<TaskUpdate> optional = taskUpdateRepository
 				.findById(id);
@@ -49,8 +82,13 @@ public class TaskUpdateService {
 		}
 
 		TaskUpdate taskUpdate = optional.get();
-
+		// update only not null fields
 		CustomUtil.copyNonNullProperties(updatedTaskUpdate, taskUpdate);
+
+		// TODO: fix internal server error
+		if (taskUpdateWithAuthorAndDateExceptIdExists(taskUpdate)) {
+			throw new EntityExistsException();
+		}
 
 		taskUpdateRepository.save(taskUpdate);
 	}

@@ -13,4 +13,8 @@ public interface TaskUpdateRepository extends JpaRepository<TaskUpdate, Long> {
 	@Query("SELECT tu FROM TaskUpdate tu WHERE tu.author = :author AND tu.date=:date")
 	Optional<TaskUpdate> findTaskUpdateByAuthorAndDate(String author,
 			LocalDate date);
+
+	@Query("SELECT tu FROM TaskUpdate tu WHERE tu.author = :author AND tu.date = :date AND tu.id != :id")
+	Optional<TaskUpdate> findTaskUpdateByAuthorAndDateExceptId(String author,
+			LocalDate date, Long id);
 }
